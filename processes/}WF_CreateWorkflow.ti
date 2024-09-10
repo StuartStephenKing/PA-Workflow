@@ -1,0 +1,311 @@
+#region Prolog
+vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i:\s' );
+vWorkflowControlCube = '}WF_Control';
+vWorkflowsDimension = '}WF';
+vWorkflowCubeName = '}WF_' | pWorkflow | '_State';
+vWorkflowStateDim = '}WF_State';
+vWorkflowCubesCube = '}WF_Cubes';
+vWorkflowComments = '}WF_Comments';
+vWorkflowCommentLines = '}WF_Comment_Lines';
+vWorkflowCommentCubeName = '}WF_' | pWorkflow | '_Comments';
+
+vDebugFile = GetProcessName() | '_debug.log';
+IF ( pDebug @= 'Y' );
+    vDebugLine = 'Parameters { pControlDimension:' | pControlDimension | ' pControlHierarchy:' | pControlHierarchy | ' pControlMember: ' | pControlMember | '}'; 
+    ASCIIOutput( vDebugFile, vDebugLine );
+ENDIF;
+
+# Validate the control dimension, control hierarchy, and control member are valid (exist in the TM1 model)
+vValidControl = 0;
+IF ( pControlDimension @<> '' );
+    IF ( DimensionExists( pControlDimension ) = 1);
+        IF ( pControlHierarchy @<> '' );
+            IF ( HierarchyExists( pControlDimension, pControlHierarchy ) = 1);
+                IF ( HierarchyElementExists( pControlDimension, pControlHierarchy, pControlMember ) = 1);
+                    vWorkflowIndex = 1;
+                    vWorkflow = DIMNM ( '}Workflows', vWorkflowIndex);
+                    WHILE ( vWorkflow @<> '' );
+                        IF ( vWorkflow @<> pWorkflow );
+                            vWorkflowControlDimenion  = CellGetS( vWorkflowControlCube, vWorkflow, 'Control Dimension' );
+                            vWorkflowControlHierarchy  = CellGetS( vWorkflowControlCube, vWorkflow, 'Control Hierarchy' );
+                            vWorkflowControlMember  = CellGetS( vWorkflowControlCube, vWorkflow, 'Control Member' );
+                            IF ( pControlDimension @= vWorkflowControlDimenion & pControlHierarchy @= vWorkflowControlHierarchy & pControlMember @= vWorkflowControlMember);
+                                ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Control member [' | pControlDimension | '].[' | pControlHierarchy | '].[' | pControlMember | '] already in use in workflow ' | vWorkflow);
+                                ProcessQuit;
+                            ENDIF;
+                        ENDIF;
+                        vWorkflowIndex = vWorkflowIndex + 1;
+                        vWorkflow = DIMNM ( '}Workflows', vWorkflowIndex);
+                    END;
+                    vValidControl = 1;
+                ELSE;
+                    ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Control member does not exist' );
+                    ProcessQuit;
+                ENDIF;
+            ELSE;
+                ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Control hierarchy does not exist' );
+                ProcessQuit;
+            ENDIF;
+        ENDIF;
+    ELSE;
+        ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Control dimension does not exist' );
+        ProcessQuit;
+    ENDIF;
+ENDIF;
+
+
+# Validate a Workflow with the same name does not already exist
+# Only applies when the replace parameter is not set to 'Y'
+IF ( DimensionElementExists( vWorkflowsDimension, pWorkflow ) = 1 & pReplace @<> 'Y');
+    ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Workflow already exists' );
+    ProcessQuit;
+ENDIF;
+
+
+# Validate that all listed cubes contain the approval dimension and control dimension
+vDelimiter = ',';
+vIndexStr = 1;
+vCharSplit  = SUBST ( pCubes, vIndexStr, 1 );
+vWorkflowCube  = '';
+vStringLen = LONG ( pCubes );
+WHILE (vIndexStr <= vStringLen + 1);
+    IF (( vCharSplit @= vDelimiter ) %  vIndexStr = vStringLen +1 );
+
+        vFoundApprovalDim = 0;
+        vFoundControlDim = 0;
+        vDimIndex = 1;
+        vDim = TABDIM( vWorkflowCube, vDimIndex );
+        WHILE ( vDim @<> '' );
+            IF ( vDim @= pDimension );
+                vFoundApprovalDim = 1;
+            ELSEIF ( vDim @= pControlDimension );            
+                vFoundControlDim  = 1;
+            ENDIF;
+            vDimIndex = vDimIndex +  1;
+            vDim = TABDIM( vWorkflowCube, vDimIndex );
+        END;
+        IF ( vFoundApprovalDim = 0 );
+            ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Cube ' | vWorkflowCube | ' does not contain approval dimension ' | pDimension );
+            ProcessQuit;
+        ENDIF;
+        IF ( vFoundControlDim = 0 & vValidControl = 1 );
+            ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Cube ' | vWorkflowCube | ' does not contain control dimension ' | pControlDimension );
+            ProcessQuit;
+        ENDIF;
+        vWorkflowCube = '';
+    ELSE;
+        vWorkflowCube = vWorkflowCube | vCharSplit;
+    ENDIF;
+    vIndexStr = vIndexStr + 1;
+    vCharSplit  = SUBST ( pCubes, vIndexStr, 1 );
+END;
+
+
+vNonPrimaryWorkflowControlMember = 0;
+
+# Validate that all other workflows using the same control dimension use the same hirarchy and a different control member
+vWorkflowIndex = 1;
+vWorkflow = DIMNM ( vWorkflowsDimension, vWorkflowIndex );
+WHILE ( vWorkflow @<> '' );
+    IF ( vWorkflow @<> pWorkflow );
+        vWorkflowApprovalDimension = CellGetS( vWorkflowControlCube, vWorkflow, 'Dimension' );
+        # Check if the control dimension is used in any other application
+        IF ( pDimension @= vWorkflowApprovalDimension );
+            vWorkflowControlDimension = CellGetS( vWorkflowControlCube, vWorkflow, 'Control Dimension' );      
+            vWorkflowControlHierarchy = CellGetS( vWorkflowControlCube, vWorkflow, 'Control Hierarchy' );      
+            vWorkflowControlMember = CellGetS( vWorkflowControlCube, vWorkflow, 'Control Member' );      
+            IF ( vWorkflowControlMember @= '' );
+                # Other workflow does not use control dimension/hierarchy/member
+            ELSEIF ( pControlDimension @<> vWorkflowControlDimension );
+                ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Approval dimension ' | pDimension | ' used in ' | vWorkflow | '.  Control dimension must be ' | vWorkflowControlDimension );
+                ProcessQuit;
+            ELSEIF ( pControlHierarchy @<> vWorkflowControlHierarchy );
+                ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Approval dimension ' | pDimension | ' used in ' | vWorkflow | '.  Control hierarchy must be ' | vWorkflowControlHierarchy );
+                ProcessQuit;
+            ELSEIF ( pControlMember @= vWorkflowControlMember );
+                ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Approval dimension ' | pDimension | ' used in ' | vWorkflow | '.  Control member must not be ' | vWorkflowControlMember );
+                ProcessQuit;
+            ELSEIF ( vWorkflowControlMember @<> '' );
+                vNonPrimaryWorkflowControlMember = vNonPrimaryWorkflowControlMember + 1;
+            ENDIF;
+
+
+        ENDIF;
+        vDelimiter = ',';
+        vIndexStr = 1;
+        vCharSplit  = SUBST ( pCubes, vIndexStr, 1 );
+        vWorkflowCube  = '';
+        vStringLen = LONG ( pCubes );
+        WHILE (vIndexStr <= vStringLen + 1);
+            IF (( vCharSplit @= vDelimiter ) %  vIndexStr = vStringLen +1 );
+                # Check of cube listed in this workflow is already used on another workflow
+                IF ( CellGetN( vWorkflowCubesCube, vWorkflowCube, vWorkflow ) = 1 );
+                    vControlDimension = CellGetS( vWorkflowControlCube, vWorkflow, 'Control Dimension' );
+                    vControlHierarchy = CellGetS( vWorkflowControlCube, vWorkflow, 'Control Hierarchy' );
+                    vControlMember = CellGetS( vWorkflowControlCube, vWorkflow, 'Control Member' );
+                    # Validate the other workflow uses the same control dimension/hierarchy and a different control member
+                    IF ( pControlDimension @= vControlDimension & pControlHierarchy @= vControlHierarchy & pControlMember @<> vControlMember );
+
+                    ELSE;
+                        ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Cube ' | vWorkflowCube | ' already used in Workflow ' | vWorkflow );
+                        ProcessQuit;
+                    ENDIF;
+                ENDIF;
+                vWorkflowCube = '';
+            ELSE;
+                vWorkflowCube = vWorkflowCube | vCharSplit;
+            ENDIF;
+            vIndexStr = vIndexStr + 1;
+            vCharSplit  = SUBST ( pCubes, vIndexStr, 1 );
+        END;
+    ENDIF;
+
+    vWorkflowIndex = vWorkflowIndex + 1;
+    vWorkflow = DIMNM ( vWorkflowsDimension, vWorkflowIndex );
+END;
+
+
+# Delete an existing Workflow with the same name and add the new workflow!
+IF ( DimensionElementExists( vWorkflowsDimension, pWorkflow ) = 1  );
+    ExecuteProcess( '}WF_DeleteWorkflow', 'pWorkflow', pWorkflow );
+ENDIF;
+DimensionElementInsertDirect( vWorkflowsDimension, '', pWorkflow, 'N' );
+CellPutS( pWorkflow, vWorkflowControlCube, pWorkflow, 'Name' );
+
+CellPutS( TM1User(), vWorkflowControlCube, pWorkflow, 'Owner' );
+CellPutS( pWorkflow, vWorkflowControlCube, pWorkflow, 'State Cube' );
+CellPutS( pCubes, vWorkflowControlCube, pWorkflow, 'Input Cubes' );
+CellPutS( pDimension, vWorkflowControlCube, pWorkflow, 'Dimension' );
+CellPutS( pHierarchy, vWorkflowControlCube, pWorkflow, 'Hierarchy' );
+CellPutS( pSubset, vWorkflowControlCube, pWorkflow, 'Subset' );
+CellPutS( vNow, vWorkflowControlCube, pWorkflow, 'Created' );
+CellPutS( 'New', vWorkflowControlCube, pWorkflow, 'State' );
+CellPutS( pSecurity, vWorkflowControlCube, pWorkflow, 'Security' );
+CellPutS( pSecurityMode, vWorkflowControlCube, pWorkflow, 'Security Mode' );
+CellPutS( pLocking, vWorkflowControlCube, pWorkflow, 'Locking' );
+CellPutS( pControlDimension, vWorkflowControlCube, pWorkflow, 'Control Dimension' );
+CellPutS( pControlHierarchy, vWorkflowControlCube, pWorkflow, 'Control Hierarchy' );
+CellPutS( pControlMember, vWorkflowControlCube, pWorkflow, 'Control Member' );
+CellPutN( 1, vWorkflowControlCube, pWorkflow, 'Comment Index' );
+CellPutS( pGroupPrefix, vWorkflowControlCube, pWorkflow, 'Group Prefix' );
+
+
+IF ( CubeExists ( vWorkflowCubeName ) = 1 );
+    CubeDestroy( vWorkflowCubeName );
+ENDIF;
+
+# Create a public default view in the Workflow state management cube
+vWorkflowStateView = 'Default';
+IF ( pSecurityMode @= 'Client' );
+    CubeCreate( vWorkflowCubeName, pDimension, '}Clients', vWorkflowStateDim );
+    vMDX = 'SELECT { TM1SubsetAll([' | vWorkflowStateDim | '])} ON 0, NON EMPTY { TM1SubsetToSet( [' | pDimension | '].[' | pHierarchy | '], ''' | pSubset | ''' ) }*{TM1SubsetAll([}Clients].[}Clients])} ON 1 FROM [' | vWorkflowCubeName | ']';
+    ViewCreateByMDX( vWorkflowCubeName, vWorkflowStateView, vMDX );
+ELSEIF ( pSecurityMode @= 'Group'); 
+    CubeCreate( vWorkflowCubeName, pDimension, '}Groups', vWorkflowStateDim );
+    vMDX = 'SELECT { TM1SubsetAll([' | vWorkflowStateDim | '])} ON 0, NON EMPTY { TM1SubsetToSet( [' | pDimension | '].[' | pHierarchy | '], ''' | pSubset | ''' ) }*{TM1SubsetAll([}Groups].[}Groups])} ON 1 FROM [' | vWorkflowCubeName | ']';
+    ViewCreateByMDX( vWorkflowCubeName, vWorkflowStateView, vMDX );
+ELSE;
+    ExecuteProcess( '}WF_LogError', 'pWorkflow', pWorkflow, 'pError', 'Failed to create workflow ' | pWorkflow, 'pMessage', 'Invalid security mode: ' | pSecurityMode );
+    ProcessQuit;
+ENDIF;
+
+
+IF ( pSecurity @= 'Element' );
+    vElementSecurityCube = '}ElementSecurity_' | pDimension; 
+    IF ( CubeExists( vElementSecurityCube )  = 0);
+        CubeCreate( vElementSecurityCube, pDimension, '}Groups' );
+    ELSE;
+        # Cell security cube already exists and needs to be updated
+    ENDIF;
+ENDIF;
+
+
+# Create the SecurityOverlayGlobal cubes for each cube
+vDelimiter = ',';
+vIndexStr = 1;
+vCharSplit  = SUBST ( pCubes, vIndexStr, 1 );
+vWorkflowCube  = '';
+vStringLen = LONG ( pCubes );
+WHILE (vIndexStr <= vStringLen + 1);
+    IF (( vCharSplit @= vDelimiter ) %  vIndexStr = vStringLen +1 );
+        CellPutN( 1, vWorkflowCubesCube, vWorkflowCube, pWorkflow );
+        vOverlayMap = '';
+        vCellSecurityMap = '';
+        vCubeDimensionIndex = 1;
+        vDimension = TABDIM ( vWorkflowCube, vCubeDimensionIndex );
+        WHILE ( vDimension @<> '');
+            IF ( vDimension  @= pDimension );
+                vOverlayMap = vOverlayMap | '1';
+                vCellSecurityMap = vCellSecurityMap | '1';
+            ELSEIF ( vDimension @= pControlDimension );
+                vOverlayMap = vOverlayMap | '1';
+                vCellSecurityMap = vCellSecurityMap | '1';
+            ELSE;
+                vOverlayMap = vOverlayMap | '0';
+                vCellSecurityMap = vCellSecurityMap | '0';
+            ENDIF;
+            vCubeDimensionIndex = vCubeDimensionIndex + 1;
+            vDimension = TABDIM ( vWorkflowCube, vCubeDimensionIndex );
+            IF ( vDimension @<> '' );
+                vCellSecurityMap = vCellSecurityMap | ':';
+                vOverlayMap = vOverlayMap | ':';
+            ENDIF;
+        END;
+
+        IF ( CubeExists( '}SecurityOverlayGlobal_' |  vWorkflowCube ) = 0 );
+            SecurityOverlayCreateGlobalDefault ( vWorkflowCube, vOverlayMap );
+        ENDIF;
+
+        IF ( pSecurity @= 'Cell' );
+            IF ( CubeExists( '}CellSecurity_' | vWorkflowCube ) = 0 );
+                CellSecurityCubeCreate ( vWorkflowCube, vCellSecurityMap );
+            ENDIF;
+        ENDIF;
+
+        vApprovalElementIndex = 1;
+        vApprovalElement = DIMNM ( pDimension, vApprovalElementIndex );
+        WHILE ( vApprovalElement @<> '' );
+            vOverlayMap = '';
+            vCubeDimOrderIndex = 1;
+            vCubeDimOrder = TABDIM ( vWorkflowCube, vCubeDimOrderIndex );
+            WHILE ( vCubeDimOrder @<> '' );
+                IF ( vCubeDimOrder @= pDimension );
+                    IF ( vOverlayMap @<> '' );
+                        vOverlayMap = vOverlayMap | ' | ';
+                    ENDIF;
+                    vOverlayMap = vOverlayMap | vApprovalElement;
+                ELSEIF ( vCubeDimOrder @= pControlDimension & vValidControl = 1 );
+                    IF ( vOverlayMap @<> '' );
+                        vOverlayMap = vOverlayMap | ' | ';
+                    ENDIF;
+                    vOverlayMap = vOverlayMap | pControlMember;
+                ENDIF;
+                vCubeDimOrderIndex = vCubeDimOrderIndex + 1;
+                vCubeDimOrder = TABDIM ( vWorkflowCube, vCubeDimOrderIndex );
+            END;
+            SecurityOverlayGlobalLockNode ( 1, vWorkflowCube, vOverlayMap ); 
+            vApprovalElementIndex = vApprovalElementIndex + 1;
+            vApprovalElement = DIMNM ( pDimension, vApprovalElementIndex );
+        END;
+        vWorkflowCube = '';
+    ELSE;
+        vWorkflowCube = vWorkflowCube | vCharSplit;
+    ENDIF;
+    vIndexStr = vIndexStr + 1;
+    vCharSplit  = SUBST ( pCubes, vIndexStr, 1 );
+END;
+
+
+#Create the workflow comment trail cube
+IF ( CubeExists( vWorkflowCommentCubeName ) = 1);
+    CubeDestroy( vWorkflowCommentCubeName );
+ENDIF;
+CubeCreate( vWorkflowCommentCubeName, vWorkflowCommentLines, vWorkflowComments );
+
+#endregion
+#region Epilog
+
+
+
+
+#endregion

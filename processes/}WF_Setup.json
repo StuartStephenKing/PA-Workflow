@@ -1,0 +1,29 @@
+{
+	"@type":"Process",
+	"Name":"}WF_Setup",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_Setup.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pReset",
+			"Prompt":"",
+			"Value":"Y",
+			"Type":"String"
+		},
+		{
+			"Name":"pWorkflowGroupPrefix",
+			"Prompt":"",
+			"Value":"WF_",
+			"Type":"String"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304991000",
+	"VariablesUIData": [],
+	"UIData": "_ParameterConstraints=e30=\f"
+}

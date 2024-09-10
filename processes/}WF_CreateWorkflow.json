@@ -1,0 +1,101 @@
+{
+	"@type":"Process",
+	"Name":"}WF_CreateWorkflow",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_CreateWorkflow.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"Name of the new Workflow",
+			"Value":"Budget",
+			"Type":"String"
+		},
+		{
+			"Name":"pDimension",
+			"Prompt":"Approval dimension",
+			"Value":"plan_business_unit",
+			"Type":"String"
+		},
+		{
+			"Name":"pHierarchy",
+			"Prompt":"Hierarchy in the approval dimension",
+			"Value":"plan_business_unit",
+			"Type":"String"
+		},
+		{
+			"Name":"pSubset",
+			"Prompt":"Subset in the approval dimension (used for Alias setting)",
+			"Value":"All Business Units",
+			"Type":"String"
+		},
+		{
+			"Name":"pCubes",
+			"Prompt":"List of contribution cubes",
+			"Value":"plan_BudgetPlan,plan_BudgetPlanLineItem",
+			"Type":"String"
+		},
+		{
+			"Name":"pReplace",
+			"Prompt":"Replace an existing Workflow with the same name ",
+			"Value":"Y",
+			"Type":"String"
+		},
+		{
+			"Name":"pSecurity",
+			"Prompt":"None,Element,Cell",
+			"Value":"Element",
+			"Type":"String"
+		},
+		{
+			"Name":"pSecurityMode",
+			"Prompt":"Client or Group",
+			"Value":"Group",
+			"Type":"String"
+		},
+		{
+			"Name":"pLocking",
+			"Prompt":"Enable locking of slices (None, Any, All)",
+			"Value":"All",
+			"Type":"String"
+		},
+		{
+			"Name":"pControlDimension",
+			"Prompt":"Optional control dimension (required when multiple Workflows share cubes)",
+			"Value":"plan_version",
+			"Type":"String"
+		},
+		{
+			"Name":"pControlHierarchy",
+			"Prompt":"Hierarchy in the control dimension",
+			"Value":"plan_version",
+			"Type":"String"
+		},
+		{
+			"Name":"pControlMember",
+			"Prompt":"Member in the control dimension that is used to make this Workflow unique",
+			"Value":"FY 2004 Budget",
+			"Type":"String"
+		},
+		{
+			"Name":"pGroupPrefix",
+			"Prompt":"Prefix for groups created for this workflow ",
+			"Value":"WF_",
+			"Type":"String"
+		},
+		{
+			"Name":"pDebug",
+			"Prompt":"",
+			"Value":"Y",
+			"Type":"String"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304825000",
+	"VariablesUIData": [],
+	"UIData": "_ParameterConstraints=e30=\f"
+}

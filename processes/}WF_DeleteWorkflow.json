@@ -1,0 +1,23 @@
+{
+	"@type":"Process",
+	"Name":"}WF_DeleteWorkflow",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_DeleteWorkflow.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"",
+			"Value":"Forecast",
+			"Type":"String"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304855000",
+	"VariablesUIData": [],
+	"UIData": "_ParameterConstraints=e30=\f"
+}

@@ -1,0 +1,36 @@
+#region Prolog
+
+vCubeIndex = 1;
+vCube = DIMNM( '}Cubes', vCubeIndex );
+WHILE ( vCube @<> '');
+    IF ( CubeExists( '}SecurityOverlayGlobal_' | vCube  ) = 1);
+        SecurityOverlayDestroyGlobalDefault ( vCube );
+    ENDIF;
+
+    IF ( CubeExists( '}CellSecurity_' | vCube  ) = 1);
+        CellSecurityCubeDestroy ( vCube );
+    ENDIF;
+
+    vCubeIndex = vCubeIndex + 1;
+    vCube = DIMNM( '}Cubes', vCubeIndex );
+END;
+
+vDimensionIndex = 1;
+vDimension = DIMNM( '}Dimensions', vDimensionIndex );
+WHILE ( vDimension @<> '');
+    IF ( CubeExists( '}ElementSecurity_' | vDimension  ) = 1);
+        CubeDestroy ( '}ElementSecurity_' | vDimension );
+    ENDIF;
+    vDimensionIndex = vDimensionIndex + 1;
+    vDimension = DIMNM( '}Dimensions', vDimensionIndex );
+END;
+
+
+
+
+#endregion
+#region Epilog
+
+SecurityRefresh;
+
+#endregion

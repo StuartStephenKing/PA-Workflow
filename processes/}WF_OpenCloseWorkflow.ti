@@ -1,0 +1,49 @@
+#region Prolog
+vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i:\s' );
+vWorkflowControlCube = '}WF_Control';
+vWorkflowsDimension = '}WF';
+vWorkflowCubeName = '}WF_' | pWorkflow;
+vWorkflowControl = '}WF_Control';
+
+vApprovalDimension = CellGetS( '}Workflow_Control', pWorkflow, 'Dimension' );
+vLocking = CellGetS( '}Workflow_Control', pWorkflow, 'Locking' );
+vControlDimension  = CellGetS( '}Workflow_Control', pWorkflow, 'Control Dimension' );
+vControlHierarchy = CellGetS( '}Workflow_Control', pWorkflow, 'Control Hierarchy' );
+vControlMember  = CellGetS( '}Workflow_Control', pWorkflow, 'Control Member' );
+
+vValidControl = 0;
+IF ( DimensionExists( vControlDimension ) = 1);
+    IF ( HierarchyExists( vControlDimension, vControlHierarchy ) = 1);
+        IF ( HierarchyElementExists( vControlDimension, vControlHierarchy, vControlMember ) = 1);
+            vValidControl = 1;
+        ENDIF;
+    ENDIF;
+ENDIF;
+
+IF ( vLocking @= 'Y' );
+    vCubeIndex = 1;
+    vCube = DIMNM( '}Cubes', vCubeIndex );
+    WHILE ( vCube @<> '');
+        IF ( CELLGETN ( '}Workflow_Cubes', vCube, pWorkflow ) = 1);
+            vNodeIndex = 1;
+            vNode = DIMNM ( vApprovalDimension, vNodeIndex );
+            WHILE ( vNode @<> '' );
+                IF ( vValidControl = 0 );
+                    SecurityOverlayGlobalLockCell ( pLock, vCube, vNode );
+                ELSE;
+                    SecurityOverlayGlobalLockCell ( pLock, vCube, vControlMember, vNode );
+                ENDIF;
+                vNodeIndex = vNodeIndex + 1;
+                vNode = DIMNM ( vApprovalDimension, vNodeIndex );
+            END;
+        ENDIF;
+        vCubeIndex = vCubeIndex + 1;
+        vCube = DIMNM( '}Cubes', vCubeIndex );
+    END;
+ENDIF;
+
+#endregion
+#region Epilog
+
+
+#endregion

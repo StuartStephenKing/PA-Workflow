@@ -1,0 +1,53 @@
+{
+	"@type":"Process",
+	"Name":"}WF_UpdateNodeState",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_UpdateNodeState.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"Name of Workflow",
+			"Value":"Forecast",
+			"Type":"String"
+		},
+		{
+			"Name":"pNode",
+			"Prompt":"Node to lock or unlock",
+			"Value":"Canada",
+			"Type":"String"
+		},
+		{
+			"Name":"pLock",
+			"Prompt":"0 = Unlocked, 1 = Locked",
+			"Value":0,
+			"Type":"Numeric"
+		},
+		{
+			"Name":"pComments",
+			"Prompt":"Comments provided by contributing user",
+			"Value":"Sample Comment",
+			"Type":"String"
+		},
+		{
+			"Name":"pState",
+			"Prompt":"Available,Open,Submitted,Approved,Rejected",
+			"Value":"ready for entry",
+			"Type":"String"
+		},
+		{
+			"Name":"pGroup",
+			"Prompt":"Group to update state for (only when using group mode)",
+			"Value":"",
+			"Type":"String"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304999000",
+	"VariablesUIData": [],
+	"UIData": "_ParameterConstraints=e30=\f"
+}

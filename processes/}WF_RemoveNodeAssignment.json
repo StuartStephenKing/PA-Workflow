@@ -1,0 +1,35 @@
+{
+	"@type":"Process",
+	"Name":"}WF_RemoveNodeAssignment",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_RemoveNodeAssignment.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"Name of workflow to update",
+			"Value":"Budget",
+			"Type":"String"
+		},
+		{
+			"Name":"pContributor",
+			"Prompt":"User or group to remove",
+			"Value":"NA Contributors",
+			"Type":"String"
+		},
+		{
+			"Name":"pNode",
+			"Prompt":"Node in approval dimension ",
+			"Value":"North America",
+			"Type":"String"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304957000",
+	"VariablesUIData": [],
+	"UIData": "_ParameterConstraints=e30=\f"
+}

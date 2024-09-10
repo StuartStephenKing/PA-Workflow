@@ -1,0 +1,29 @@
+{
+	"@type":"Process",
+	"Name":"}WF_OpenCloseWorkflow",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_OpenCloseWorkflow.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"Name Workflow to unlock",
+			"Value":"Workflow1",
+			"Type":"String"
+		},
+		{
+			"Name":"pLock",
+			"Prompt":"0=Unlock, 1=Lock",
+			"Value":0,
+			"Type":"Numeric"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304931000",
+	"VariablesUIData": [],
+	"UIData": "_ParameterConstraints=e30=\f"
+}

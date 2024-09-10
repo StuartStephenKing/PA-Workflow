@@ -1,0 +1,226 @@
+#region Prolog
+vWorkflowControlDimension = '}WF_Control';
+vWorkflowControlCube = '}WF_Control';
+vWorkflowCubesCube = '}WF_Cubes';
+vWorkflowStateDim = '}WF_State';
+vWorkflowsDimension = '}WF';
+vWorkflowComments = '}WF_Comments';
+vWorkflowCommentLines = '}WF_Comment_Lines';
+vWorkflowErrors = '}WF_Errors';
+vWorkflowErrorLines = '}WF_Error_Lines';
+vWorkflowGroupPrefix = pWorkflowGroupPrefix;
+
+IF ( pReset @= 'Y' );
+    vIndex = 1;
+    vWorkflow = DIMNM( vWorkflowsDimension, vIndex );
+    WHILE ( vWorkflow @<> '' );
+        ExecuteProcess( '}WF_DeleteWorkflow',
+                       'pWorkflow', vWorkflow );
+        vIndex = vIndex + 1;
+        vWorkflow = DIMNM( vWorkflowsDimension, vIndex );
+    END;
+ENDIF;
+
+IF ( CubeExists ( vWorkflowControlCube ) = 1 );
+    CubeDestroy( vWorkflowControlCube );
+ENDIF;
+
+IF ( CubeExists ( vWorkflowCubesCube ) = 1 );
+    CubeDestroy( vWorkflowCubesCube );
+ENDIF;
+
+IF ( DimensionExists ( vWorkflowControlDimension ) = 1 );
+    DimensionDestroy( vWorkflowControlDimension );
+ENDIF;
+DimensionCreate( vWorkflowControlDimension );
+
+IF ( DimensionExists ( vWorkflowsDimension ) = 1 );
+    DimensionDestroy( vWorkflowsDimension );
+ENDIF;
+DimensionCreate( vWorkflowsDimension );
+
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Name', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Owner', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Created', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'State Cube', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Input Cubes', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Dimension', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Hierarchy', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Subset', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'State', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Security', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Security Mode', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Locking', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Control Dimension', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Control Hierarchy', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Control Member', 'S' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Comment Index', 'N' );
+DimensionElementInsertDirect( vWorkflowControlDimension, '', 'Group Prefix', 'S' );
+
+
+CubeCreate( vWorkflowControlCube, vWorkflowsDimension, vWorkflowControlDimension );
+CubeCreate( vWorkflowCubesCube, '}Cubes', vWorkflowsDimension );
+
+
+IF ( DimensionExists( vWorkflowStateDim )  = 1 & pReset @= 'Y' );
+    DimensionDestroy( vWorkflowStateDim );
+ENDIF;
+DimensionCreate( vWorkflowStateDim );
+DimensionElementInsertDirect( vWorkflowStateDim, '', 'Contributor', 'S' );
+DimensionElementInsertDirect( vWorkflowStateDim, '', 'Reviewer', 'S' );
+DimensionElementInsertDirect( vWorkflowStateDim, '', 'State', 'S' );
+DimensionElementInsertDirect( vWorkflowStateDim, '', 'Last Update', 'S' );
+DimensionElementInsertDirect( vWorkflowStateDim, '', 'Lock', 'S' );
+
+
+IF ( DimensionExists ( vWorkflowErrorLines ) = 1 );
+    DimensionDestroy( vWorkflowErrorLines );
+ENDIF;
+DimensionCreate( vWorkflowErrorLines );
+DimensionElementInsertDirect( vWorkflowErrorLines, '', '1', 'N' );
+
+
+IF ( CubeExists( vWorkflowErrors ) = 1);
+    CubeDestroy( vWorkflowErrors );
+ENDIF;
+
+
+IF ( DimensionExists ( vWorkflowErrorLines ) = 1 );
+    DimensionDestroy( vWorkflowErrorLines );
+ENDIF;
+DimensionCreate( vWorkflowErrorLines );
+DimensionElementInsertDirect( vWorkflowErrorLines, '', '1', 'N' );
+
+IF ( DimensionExists ( vWorkflowErrors ) = 1 );
+    DimensionDestroy( vWorkflowErrors );
+ENDIF;
+DimensionCreate( vWorkflowErrors );
+DimensionElementInsertDirect( vWorkflowErrors, '', 'Workflow', 'S' );
+DimensionElementInsertDirect( vWorkflowErrors, '', 'Error', 'S' );
+DimensionElementInsertDirect( vWorkflowErrors, '', 'Message', 'S' );
+DimensionElementInsertDirect( vWorkflowErrors, '', 'DateTime', 'S' );
+DimensionElementInsertDirect( vWorkflowErrors, '', 'User', 'S' );
+
+CubeCreate( vWorkflowErrors, vWorkflowErrorLines, vWorkflowErrors );
+
+IF ( DimensionExists( vWorkflowCommentLines ) = 1 );
+    DimensionDestroy( vWorkflowCommentLines );
+ENDIF;
+DimensionCreate( vWorkflowCommentLines );
+DimensionElementInsertDirect( vWorkflowCommentLines, '', '1', 'N' );
+
+IF ( DimensionExists( vWorkflowComments ) = 1 );
+    DimensionDestroy( vWorkflowComments );
+ENDIF;
+DimensionCreate( vWorkflowComments );
+DimensionElementInsertDirect( vWorkflowComments, '', 'DateTime', 'S' );
+DimensionElementInsertDirect( vWorkflowComments, '', 'User', 'S' );
+DimensionElementInsertDirect( vWorkflowComments, '', 'Workflow', 'S' );
+DimensionElementInsertDirect( vWorkflowComments, '', 'Node', 'S' );
+DimensionElementInsertDirect( vWorkflowComments, '', 'State', 'S' );
+DimensionElementInsertDirect( vWorkflowComments, '', 'Comment', 'S' );
+
+
+# Create picklist objects
+
+vPicklistsCube = '}WF_Picklists';
+vPicklistsPicklistCube = '}PickList_}WF_Picklists';
+IF ( CubeExists( vPicklistsCube ) = 1 );
+    CubeDestroy( vPicklistsCube );
+ENDIF;
+
+vPicklistDimension = '}WF_Picklists';
+IF ( DimensionExists( vPicklistDimension ) = 1 );
+    DimensionDestroy( vPicklistDimension );
+ENDIF;
+DimensionCreate( vPicklistDimension );
+
+DimensionElementInsertDirect( vPicklistDimension, '', 'Approval Dimension', 'N' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Approval Subset', 'N' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Control Dimension', 'N' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Control Member', 'N' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Security', 'N' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Security Mode', 'N' );
+DimensionElementInsertDirect( vPicklistDimension, '', 'Locking', 'N' );
+
+
+vPicklistValueDimension = '}WF_PickValue';
+IF ( DimensionExists( vPicklistValueDimension ) = 1 );
+    DimensionDestroy( vPicklistValueDimension );
+ENDIF;
+DimensionCreate( vPicklistValueDimension );
+
+DimensionElementInsertDirect( vPicklistValueDimension, '', 'value', 'S' );
+
+CubeCreate( vPicklistsCube, vPicklistDimension, vPicklistValueDimension );
+
+CubeCreate( vPicklistsPicklistCube, vPicklistDimension, vPicklistValueDimension, '}PickList' );
+
+CubeRuleAppend( vPicklistsPicklistCube, '[''Approval Subset''] = S:''dimension:}Subsets_'' | DB( ''}WF_Picklists'', ''Approval Dimension'', !}WF_PickValue );' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Control Member''] = S:''dimension:'' | DB( ''}WF_Picklists'', ''Control Dimension'', !}WF_PickValue );' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Approval Dimension''] = S:''subset:}Dimensions:WF_ApprovalDimensions'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Control Dimension''] = S:''subset:}Dimensions:WF_ControlDimensions'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Security''] = S:''static:Cell:Element'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Security Mode''] = S:''static:Client:Group'';' );
+CubeRuleAppend( vPicklistsPicklistCube, '[''Locking''] = S:''static:Any:All'';' );
+
+
+vWorkflowGroup = '}Workflow';
+IF ( DimensionElementExists( '}Groups', vWorkflowGroup ) = 1);
+    vClientIndex = 1;
+    vClient = DIMNM( '}Clients', vClientIndex );
+    WHILE ( vClient @<> '' );
+        IF ( CellGetS( '}ClientGroups', vClient, vWorkflowGroup ) @<> vClient );
+            RemoveClientFromGroup( vClient, vWorkflowGroup );
+        ENDIF;
+        vClientIndex = vClientIndex + 1;
+        vClient = DIMNM( '}Clients', vClientIndex );
+    END;
+ENDIF;
+AddGroup( vWorkflowGroup );
+
+
+#endregion
+#region Epilog
+
+# Create subsets used to select dimension for approval and control
+vApprovalDmensionSubset = 'WF_ApprovalDimensions';
+IF ( SubsetExists( '}Dimensions', vApprovalDmensionSubset ) = 1);
+    SubsetDestroy( '}Dimensions', vApprovalDmensionSubset );
+ENDIF;
+SubsetCreatebyMDX( vApprovalDmensionSubset , 'FILTER(FILTER([}Dimensions].[}Dimensions].MEMBERS , INSTR(1 , [}Dimensions].[}Dimensions].CURRENTMEMBER.NAME , "}" , 1) <> 1) , INSTR(1 , [}Dimensions].[}Dimensions].CURRENTMEMBER.NAME , ":" , 1) = 0)', '}Dimensions' );
+
+# Create subset to generate list of contribution cubes to select from 
+vContributionCubesSubset = 'WF_ContributionCubes';
+IF ( SubsetExists( '}Cubes', vContributionCubesSubset ) = 1);
+    SubsetDestroy( '}Cubes', vContributionCubesSubset );
+ENDIF;
+SubsetCreatebyMDX( vContributionCubesSubset , 'FILTER([}Cubes].[}Cubes].MEMBERS , INSTR(1 , [}Cubes].[}Cubes].CURRENTMEMBER.NAME , "}" , 1) <> 1)', '}Cubes'  );
+
+
+# Create subset for list of SecurityOverlayGlobal cubes  
+vSecurityOverlayGlobalCubes = 'WF_SecurityOverlayGlobalCubes';
+IF ( SubsetExists( '}Cubes', vSecurityOverlayGlobalCubes ) = 1);
+    SubsetDestroy( '}Cubes', vSecurityOverlayGlobalCubes );
+ENDIF;
+SubsetCreatebyMDX( vSecurityOverlayGlobalCubes , '{GENERATE(TM1FILTERBYPATTERN([}Cubes].[}Cubes].MEMBERS, "}SecurityOverlayGlobal_*" , "MEMBER_NAME"), {STRTOMEMBER("[}Cubes].[}Cubes].[" + RIGHT([}Cubes].CURRENTMEMBER.NAME, (LEN([}Cubes].[}Cubes].CURRENTMEMBER.NAME) - 23)) + "]")})}', '}Cubes' );
+
+vCellSecurityCubes = 'WF_CellSecurityCubes';
+IF ( SubsetExists( '}Cubes', vCellSecurityCubes ) = 1);
+    SubsetDestroy( '}Cubes', vCellSecurityCubes );
+ENDIF;
+SubsetCreatebyMDX( vCellSecurityCubes , '{GENERATE(TM1FILTERBYPATTERN([}Cubes].[}Cubes].MEMBERS, "}CellSecurity_*" , "MEMBER_NAME"), {STRTOMEMBER("[}Cubes].[}Cubes].[" +   RIGHT([}Cubes].CURRENTMEMBER.NAME, (LEN([}Cubes].[}Cubes].CURRENTMEMBER.NAME) - 14)) + "]")})}', '}Cubes' );
+
+vGroupsSubset = 'WF';
+IF ( SubsetExists( '}Groups', vGroupsSubset ) = 1);
+    SubsetDestroy( '}Groups', vGroupsSubset );
+ENDIF;
+SubsetCreatebyMDX( vGroupsSubset , '{[}Groups].[}Groups].MEMBERS}', '}Groups' );
+
+vGroupsSubset = 'WF';
+IF ( SubsetExists( '}Clients', vGroupsSubset ) = 1);
+    SubsetDestroy( '}Clients', vGroupsSubset );
+ENDIF;
+SubsetCreatebyMDX( vGroupsSubset , '{[}Clients].[}Clients].MEMBERS}', '}Clients' );
+
+#endregion

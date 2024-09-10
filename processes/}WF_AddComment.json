@@ -1,0 +1,39 @@
+{
+	"@type":"Process",
+	"Name":"}WF_AddComment",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_AddComment.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"",
+			"Value":"0",
+			"Type":"String"
+		},
+		{
+			"Name":"pNode",
+			"Prompt":"",
+			"Value":"0",
+			"Type":"String"
+		},
+		{
+			"Name":"pState",
+			"Prompt":"",
+			"Value":"0",
+			"Type":"String"
+		},
+		{
+			"Name":"pComment",
+			"Prompt":"",
+			"Value":"0",
+			"Type":"String"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304798000"
+}

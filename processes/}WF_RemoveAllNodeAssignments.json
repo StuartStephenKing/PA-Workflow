@@ -1,0 +1,29 @@
+{
+	"@type":"Process",
+	"Name":"}WF_RemoveAllNodeAssignments",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_RemoveAllNodeAssignments.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"",
+			"Value":"Forecast",
+			"Type":"String"
+		},
+		{
+			"Name":"pNode",
+			"Prompt":"",
+			"Value":"Europe",
+			"Type":"String"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304945000",
+	"VariablesUIData": [],
+	"UIData": "_ParameterConstraints=e30=\f"
+}

@@ -1,0 +1,41 @@
+{
+	"@type":"Process",
+	"Name":"}WF_AssignNode",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_AssignNode.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"Name of workflow",
+			"Value":"Budget",
+			"Type":"String"
+		},
+		{
+			"Name":"pContributor",
+			"Prompt":"User or group to assign as contributor",
+			"Value":"NA Contributors",
+			"Type":"String"
+		},
+		{
+			"Name":"pReviewer",
+			"Prompt":"(Optional) User or group to assign as reviewer",
+			"Value":"Reviewers",
+			"Type":"String"
+		},
+		{
+			"Name":"pNode",
+			"Prompt":"Node in approval dimension ",
+			"Value":"North America",
+			"Type":"String"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304810000",
+	"VariablesUIData": [],
+	"UIData": "_ParameterConstraints=e30=\f"
+}

@@ -1,0 +1,29 @@
+{
+	"@type":"Process",
+	"Name":"}WF_LockUnlockWorkflow",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_LockUnlockWorkflow.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"",
+			"Value":"Forecast",
+			"Type":"String"
+		},
+		{
+			"Name":"pLock",
+			"Prompt":"",
+			"Value":1,
+			"Type":"Numeric"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304893000",
+	"VariablesUIData": [],
+	"UIData": "_ParameterConstraints=e30=\f"
+}

@@ -1,0 +1,64 @@
+#region Prolog
+vWorkflowStateCube = '}WF_' | pWorkflow | '_State';
+vWorkflowCommentCube = '}WF_' | pWorkflow | '_Comments';
+vWorkflowsDimension = '}WF';
+vApprovalDimension = CellGetS( '}WF_Control', pWorkflow, 'Dimension' );
+vApprovalHierarchy = CellGetS( '}WF_Control', pWorkflow, 'Hierarchy' );
+vApprovalSubset = CellGetS( '}WF_Control', pWorkflow, 'Subset' );
+vSecurity = CellGetS( '}WF_Control', pWorkflow, 'Security' );
+vSecurityMode = CellGetS( '}WF_Control', pWorkflow, 'Security Mode' );
+vLocking = CellGetS( '}WF_Control', pWorkflow, 'Locking' );
+vWorkflowGroupPrefix = CellGetS( '}WF_Control', pWorkflow, 'Group Prefix' );
+
+
+IF ( vSecurity @= 'Element' );
+    CubeDestroy( '}ElementSecurity_' | vApprovalDimension );
+ENDIF;
+
+IF ( vSecurityMode @= 'Client' );
+    ExecuteProcess( '}WF_DeleteGroups',
+                   'pWorkflow', pWorkflow );
+ENDIF;
+
+# Delete the SecurityGlobalOverlay and cell security cubes only if this is the last workflow using the cube
+vCubeIndex = 1;
+vCube = DIMNM( '}Cubes', vCubeIndex );
+WHILE ( vCube @<> '');
+    IF ( CELLGETN ( '}WF_Cubes', vCube, pWorkflow ) = 1);
+        lastWorkflowWithCube = 1;
+        vWorkflowIndex = 1;
+        vWorkflow = DIMNM ( vWorkflowsDimension, vWorkflowIndex );
+        WHILE ( vWorkflow @<> '' );
+            IF ( vWorkflow @<> pWorkflow);
+                vOtherWorkflowCubeIndex = 1;
+                vOtherWorkflowCube = DIMNM ( '}Cubes', vOtherWorkflowCubeIndex );
+                WHILE ( vOtherWorkflowCube @<> '' );
+                    IF ( vOtherWorkflowCube @= vCube );
+                        lastWorkflowWithCube = 0;
+                    ENDIF;
+                    vOtherWorkflowCubeIndex = vOtherWorkflowCubeIndex + 1;
+                    vOtherWorkflowCube = DIMNM ( '}Cubes', vOtherWorkflowCubeIndex );
+                END;
+            ENDIF;
+            vWorkflowIndex = vWorkflowIndex + 1;
+            vWorkflow = DIMNM ( vWorkflowsDimension, vWorkflowIndex );
+        END;
+        IF ( lastWorkflowWithCube = 1);
+            SecurityOverlayDestroyGlobalDefault ( vCube );  
+            IF ( CubeExists( '}CellSecurity_' | vCube ) = 1);
+                CellSecurityCubeDestroy( vCube );
+            ENDIF;
+            IF ( CubeExists( '}SecurityOverlayGlobal_' | vCube ) = 1);
+                SecurityOverlayDestroyGlobalDefault ( vCube );
+            ENDIF;
+        ENDIF;
+    ENDIF;
+    vCubeIndex = vCubeIndex + 1;
+    vCube = DIMNM( '}Cubes', vCubeIndex );
+END;
+
+DimensionElementDeleteDirect( vWorkflowsDimension, pWorkflow );
+CubeDestroy( vWorkflowStateCube );
+CubeDestroy( vWorkflowCommentCube );
+
+#endregion

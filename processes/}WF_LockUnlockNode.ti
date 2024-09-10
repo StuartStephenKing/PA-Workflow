@@ -1,0 +1,107 @@
+#region Prolog
+vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i:\s' );
+#vUser = TM1User();
+vWorkflowCubeName = '}WF_' | pWorkflow | '_State';
+vWorkflowControlCube = '}WF_Control';
+vWorkflowCubesCube = '}WF_Cubes';
+
+vApprovalDimension = CellGetS( vWorkflowControlCube, pWorkflow, 'Dimension' );
+vApprovalHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Hierarchy' );
+vApprovalSubset = CellGetS( vWorkflowControlCube, pWorkflow, 'Subset' );
+vSecurity = CellGetS( vWorkflowControlCube, pWorkflow, 'Security' );
+vLocking = CellGetS( vWorkflowControlCube, pWorkflow, 'Locking' );
+vControlDimension = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Dimension' );
+vControlHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Hierarchy' );
+vControlMember = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Member' );
+
+vElementChildCount = ElementComponentCount ( vApprovalDimension, vApprovalHierarchy, pNode );
+
+vValidControl = 0;
+IF ( DimensionExists( vControlDimension ) = 1);
+    IF ( HierarchyExists( vControlDimension, vControlHierarchy ) = 1);
+        IF ( HierarchyElementExists( vControlDimension, vControlHierarchy, vControlMember ) = 1);
+            vValidControl = 1;
+        ENDIF;
+    ENDIF;
+ENDIF;
+
+
+vFoundContributorWithDifferentState = 0;
+vContributorIndex = 1;
+vContributorUser = DIMNM( vWorkflowCubeName, vContributorIndex );
+WHILE ( vContributorUser @<> '' );
+    vIsContributor = CellGetS( vWorkflowCubeName, pNode, vContributorUser, 'Contributor' );
+     vContributorLockState = StringToNumber ( CellGetS ( vWorkflowCubeName, pNode, vContributorUser, 'Lock' ) );
+    IF ( vContributorLockState <> pLock & vIsContributor @<> '' );
+        vFoundContributorWithDifferentState = vFoundContributorWithDifferentState + 1;
+    ENDIF;
+    vContributorIndex = vContributorIndex + 1;
+    vContributorUser = DIMNM( vWorkflowCubeName, vContributorIndex );
+END;
+
+IF ( vLocking @= 'All' & vFoundContributorWithDifferentState > 0 );
+    ProcessError();
+ENDIF;
+
+vCubeIndex = 1;
+vCube = DIMNM( '}Cubes', vCubeIndex );
+WHILE ( vCube @<> '');
+    IF ( CELLGETN ( vWorkflowCubesCube, vCube, pWorkflow ) = 1);
+        # Set order of parameter values for the SecurityOverlayGlobalLockCell TI function to match the dimension order in the cube
+            vOverlayMap = '';
+            vCubeDimOrderIndex = 1;
+            vCubeDimOrder = TABDIM(vCube, vCubeDimOrderIndex );
+            WHILE ( vCubeDimOrder @<> '' );
+                IF ( vCubeDimOrder @= vApprovalDimension );
+                    IF ( vOverlayMap @<> '' );
+                        vOverlayMap = vOverlayMap | ' | ';
+                    ENDIF;
+                    vOverlayMap = vOverlayMap | pNode;
+                ELSEIF ( vCubeDimOrder @= vControlDimension & vValidControl = 1 );
+                    IF ( vOverlayMap @<> '' );
+                        vOverlayMap = vOverlayMap | ' | ';
+                    ENDIF;
+                    vOverlayMap = vOverlayMap | vControlMember;
+                ENDIF;
+                vCubeDimOrderIndex = vCubeDimOrderIndex + 1;
+                vCubeDimOrder = TABDIM(vCube, vCubeDimOrderIndex );
+            END;
+            SecurityOverlayGlobalLockNode ( pLock, vCube, vOverlayMap ); 
+        IF ( vElementChildCount > 0);
+            vElementIndex = 1;        
+            vDimensionElement = DIMNM( vApprovalDimension, vElementIndex );
+            WHILE ( vDimensionElement @<> '' );
+                IF ( ElementIsComponent ( vApprovalDimension, vApprovalHierarchy, vDimensionElement, pNode )  = 1);
+                    IF ( vLocking @= 'Any' );
+                        vOverlayMap = '';
+                        vCubeDimOrderIndex = 1;
+                        vCubeDimOrder = TABDIM(vCube, vCubeDimOrderIndex );
+                        WHILE ( vCubeDimOrder @<> '' );
+                            IF ( vCubeDimOrder @= vApprovalDimension );
+                                IF ( vOverlayMap @<> '' );
+                                    vOverlayMap = vOverlayMap | ' | ';
+                                ENDIF;
+                                vOverlayMap = vOverlayMap | vDimensionElement;
+                            ELSEIF ( vCubeDimOrder @= vControlDimension & vValidControl = 1 );
+                                IF ( vOverlayMap @<> '' );
+                                    vOverlayMap = vOverlayMap | ' | ';
+                                ENDIF;
+                                vOverlayMap = vOverlayMap | vControlMember;
+                            ENDIF;
+                            vCubeDimOrderIndex = vCubeDimOrderIndex + 1;
+                            vCubeDimOrder = TABDIM(vCube, vCubeDimOrderIndex );
+                        END;
+                        SecurityOverlayGlobalLockNode ( pLock, vCube, vOverlayMap ); 
+                    ENDIF;
+                ENDIF;
+                vElementIndex = vElementIndex + 1;       
+                vDimensionElement = DIMNM( vApprovalDimension, vElementIndex );
+            END;
+        ENDIF;
+    ENDIF;
+    vCubeIndex = vCubeIndex + 1;
+    vCube = DIMNM( '}Cubes', vCubeIndex );
+END;
+
+
+#endregion

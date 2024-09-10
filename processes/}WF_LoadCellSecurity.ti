@@ -1,0 +1,86 @@
+#region Prolog
+
+vCellSecurityCube = '}CellSecurity_' | pCube;
+vCellSecurityDimensionCount = CubeDimensionCountGet( vCellSecurityCube );
+
+DatasourceNameForServer = pFile; 
+DatasourceASCIIQuoteCharacter = '"';
+
+
+#endregion
+#region Data
+
+IF ( vCellSecurityDimensionCount = 2 );
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, pContributorGroup ) = 1);
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, pContributorGroup );
+    ENDIF;
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, pReviewerGroup ) = 1 & pReviewerGroup @<> '' );
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, pReviewerGroup );
+    ENDIF;    
+ELSEIF ( vCellSecurityDimensionCount = 3 );
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, pContributorGroup ) = 1);
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, pContributorGroup );
+    ENDIF;
+    IF ( pReviewerGroup @<> '' );
+    IF ( CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, pReviewerGroup ) = 1 );
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, pReviewerGroup );
+    ENDIF;
+        ENDIF;
+ELSEIF ( vCellSecurityDimensionCount = 4 );
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, v3, pContributorGroup ) = 1);
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, pContributorGroup );
+    ENDIF;
+     IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, v3, pReviewerGroup ) = 1 & pReviewerGroup @<> '' );
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, pReviewerGroup );
+    ENDIF;
+ELSEIF ( vCellSecurityDimensionCount = 5 );
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, v3, v4, pContributorGroup ) = 1);
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, pContributorGroup );
+    ENDIF;
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, v3, v4, pReviewerGroup ) = 1 & pReviewerGroup @<> '' );
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, pReviewerGroup );
+    ENDIF;
+ELSEIF ( vCellSecurityDimensionCount = 6 );
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, v3, v4, v5, pContributorGroup ) = 1);
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, pContributorGroup );
+    ENDIF;
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, v3, v4, v5, pReviewerGroup ) = 1 & pReviewerGroup @<> '' );
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, pReviewerGroup );
+    ENDIF;
+ELSEIF ( vCellSecurityDimensionCount = 7 );
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, v3, v4, v5, v6, pContributorGroup ) = 1);
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, v6, pContributorGroup );
+    ENDIF;
+    IF (CELLISUPDATEABLE  ( vCellSecurityCube, v1, v2, v3, v4, v5, v6, pReviewerGroup ) = 1 & pReviewerGroup @<> '' );
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, v6, pReviewerGroup );
+    ENDIF;
+ELSEIF ( vCellSecurityDimensionCount = 8 );
+    IF ( CELLISUPDATEABLE( vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, pContributorGroup ) = 1);
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, pContributorGroup );
+    ENDIF;
+    IF ( CELLISUPDATEABLE( vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, pReviewerGroup ) = 1 & pReviewerGroup @<> '' );
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, pReviewerGroup );
+    ENDIF;
+ELSEIF ( vCellSecurityDimensionCount = 9 );
+    IF ( CELLISUPDATEABLE( vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, v8, pContributorGroup ) = 1);
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, v8, pContributorGroup );
+    ENDIF;
+    IF ( CELLISUPDATEABLE( vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, v8, pReviewerGroup ) = 1 & pReviewerGroup @<> '' );
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, v8, pReviewerGroup );
+    ENDIF;
+ELSEIF ( vCellSecurityDimensionCount = 10);
+    IF ( CELLISUPDATEABLE( vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, v8, v9, pContributorGroup ) = 1);
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, v8, v9,  pContributorGroup );
+    ENDIF;
+    IF ( CELLISUPDATEABLE( vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, v8, v9, pReviewerGroup ) = 1 & pReviewerGroup @<> '' );
+            CELLPUTS ( pSecurityValue, vCellSecurityCube, v1, v2, v3, v4, v5, v6, v7, v8, v9,  pReviewerGroup );
+    ENDIF;
+ENDIF;
+
+#endregion
+#region Epilog
+
+
+ASCIIDelete( pFile );
+
+#endregion

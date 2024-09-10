@@ -1,0 +1,65 @@
+#region Prolog
+vNow           = TIMST (NOW(), '\Y-\m-\d \h:\i:\s' );
+vUser = TM1User();
+vWorkflowCubeName = '}WF_' | pWorkflow | '_state';
+vWorkflowControlCube = '}WF_Control';
+vWorkflowCubesCube = '}WF_Cubes';
+
+
+vApprovalDimension = CellGetS( vWorkflowControlCube, pWorkflow, 'Dimension' );
+vApprovalHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Hierarchy' );
+vApprovalSubset = CellGetS( vWorkflowControlCube, pWorkflow, 'Subset' );
+vSecurity = CellGetS( vWorkflowControlCube, pWorkflow, 'Security' );
+vSecurityMode = CellGetS( vWorkflowControlCube, pWorkflow, 'Security Mode' );
+vLocking = CellGetS( vWorkflowControlCube, pWorkflow, 'Locking' );
+vControlDimension = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Dimension' );
+vControlHierarchy = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Hierarchy' );
+vControlMember = CellGetS( vWorkflowControlCube, pWorkflow, 'Control Member' );
+
+vElementChildCount = ElementComponentCount ( vApprovalDimension, vApprovalHierarchy, pNode );
+
+vValidControl = 0;
+IF ( DimensionExists( vControlDimension ) = 1);
+    IF ( HierarchyExists( vControlDimension, vControlHierarchy ) = 1);
+        IF ( HierarchyElementExists( vControlDimension, vControlHierarchy, vControlMember ) = 1);
+            vValidControl = 1;
+        ENDIF;
+    ENDIF;
+ENDIF;
+
+IF ( vSecurityMode @= 'Client' );
+    CellPutS ( pState, vWorkflowCubeName, pNode, vUser, 'State' );  
+    CellPutS ( vNow, vWorkflowCubeName, pNode, vUser, 'Last Update' );  
+    CellPutS ( NumberToString ( pLock ), vWorkflowCubeName, pNode, vUser, 'Lock' );
+ELSEIF ( vSecurityMode @= 'Group' );
+    CellPutS ( pState, vWorkflowCubeName, pNode, pGroup, 'State' );  
+    CellPutS ( vNow, vWorkflowCubeName, pNode, pGroup, 'Last Update' );  
+    CellPutS ( NumberToString ( pLock ), vWorkflowCubeName, pNode, pGroup, 'Lock' );
+ENDIF;
+
+
+IF ( vElementChildCount > 0);
+    vElementIndex = 1;        
+    vDimensionElement = DIMNM( vApprovalDimension, vElementIndex );
+    WHILE ( vDimensionElement @<> '' );
+        IF ( ElementIsComponent ( vApprovalDimension, vApprovalHierarchy, vDimensionElement, pNode )  = 1);
+            IF ( vSecurityMode @= 'Client' );
+                CellPutS ( NumberToString ( pLock ), vWorkflowCubeName, vDimensionElement, vUser, 'Lock' );
+                CellPutS ( pState, vWorkflowCubeName, vDimensionElement, vUser, 'State' );  
+                CellPutS ( vNow, vWorkflowCubeName, vDimensionElement, vUser, 'Last Update' );  
+            ELSEIF ( vSecurityMode @= 'Group' );
+                CellPutS ( NumberToString ( pLock ), vWorkflowCubeName, vDimensionElement, pGroup, 'Lock' );
+                CellPutS ( pState, vWorkflowCubeName, vDimensionElement, pGroup, 'State' );  
+                CellPutS ( vNow, vWorkflowCubeName, vDimensionElement, pGroup, 'Last Update' );  
+            ENDIF;
+        ENDIF;
+        vElementIndex = vElementIndex + 1;       
+        vDimensionElement = DIMNM( vApprovalDimension, vElementIndex );
+    END;
+ENDIF;
+
+ExecuteProcess( '}WF_LockUnlockNode', 'pWorkflow', pWorkflow, 'pNode', pNode, 'pLock', pLock  );
+ExecuteProcess( '}WF_AddComment', 'pWorkflow', pWorkflow, 'PNode', pNode, 'pState', pState, 'pComment', pComments );
+
+
+#endregion

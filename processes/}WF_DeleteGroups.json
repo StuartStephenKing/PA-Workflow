@@ -1,0 +1,21 @@
+{
+	"@type":"Process",
+	"Name":"}WF_DeleteGroups",
+	"HasSecurityAccess":false,
+	"Code@Code.link":"}WF_DeleteGroups.ti",
+	"DataSource":
+	{
+		"Type":"None"
+	},
+	"Parameters":
+	[
+		{
+			"Name":"pWorkflow",
+			"Prompt":"",
+			"Value":"",
+			"Type":"String"
+		}
+	],
+	"Variables":[],
+	"UID": "1722304837000"
+}
